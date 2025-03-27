@@ -1,6 +1,4 @@
-package controller;
-
-import model.User;
+package model;
 
 public class BMI {
     private User user;

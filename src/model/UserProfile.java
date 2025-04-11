@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 public class UserProfile {
     private User user;
@@ -13,6 +15,7 @@ public class UserProfile {
     private Map<LocalDate, BMI> bmiHistory;
     private List<String> healthGoals;
     private List<String> dietaryPreferences;
+    private Map<LocalDate, List<Meal>> mealsByDate;
 
     public UserProfile(User user) {
         this.user = user;
@@ -20,6 +23,7 @@ public class UserProfile {
         this.bmiHistory = new HashMap<>();
         this.healthGoals = new ArrayList<>();
         this.dietaryPreferences = new ArrayList<>();
+        this.mealsByDate = new HashMap<>();
 
         // Initialize with current weight and BMI
         LocalDate today = LocalDate.now();
@@ -123,5 +127,83 @@ public class UserProfile {
         }
 
         return summary.toString();
+    }
+    
+    // Meal tracking methods
+    
+    /**
+     * Adds a meal to the user's meal history
+     * @param meal The meal to add
+     */
+    public void addMeal(Meal meal) {
+        LocalDate mealDate = meal.getDate();
+        if (!mealsByDate.containsKey(mealDate)) {
+            mealsByDate.put(mealDate, new ArrayList<>());
+        }
+        mealsByDate.get(mealDate).add(meal);
+    }
+    
+    /**
+     * Removes a meal from the user's meal history
+     * @param meal The meal to remove
+     * @return true if the meal was removed, false otherwise
+     */
+    public boolean removeMeal(Meal meal) {
+        LocalDate mealDate = meal.getDate();
+        if (mealsByDate.containsKey(mealDate)) {
+            return mealsByDate.get(mealDate).remove(meal);
+        }
+        return false;
+    }
+    
+    /**
+     * Gets all meals for a specific date
+     * @param date The date to get meals for
+     * @return A list of meals for the specified date
+     */
+    public List<Meal> getMealsByDate(LocalDate date) {
+        return mealsByDate.getOrDefault(date, new ArrayList<>());
+    }
+    
+    /**
+     * Gets all meals within a date range
+     * @param startDate The start date (inclusive)
+     * @param endDate The end date (inclusive)
+     * @return A map of dates to meals within the specified range
+     */
+    public Map<LocalDate, List<Meal>> getMealsByDateRange(LocalDate startDate, LocalDate endDate) {
+        return mealsByDate.entrySet().stream()
+                .filter(entry -> !entry.getKey().isBefore(startDate) && !entry.getKey().isAfter(endDate))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (v1, v2) -> v1, TreeMap::new));
+    }
+    
+    /**
+     * Calculates the total calories consumed on a specific date
+     * @param date The date to calculate calories for
+     * @return The total calories consumed on the specified date
+     */
+    public int getTotalCaloriesByDate(LocalDate date) {
+        List<Meal> meals = getMealsByDate(date);
+        return meals.stream().mapToInt(Meal::getCalories).sum();
+    }
+    
+    /**
+     * Gets all meals by category for a specific date
+     * @param date The date to get meals for
+     * @param category The category to filter by
+     * @return A list of meals matching the category for the specified date
+     */
+    public List<Meal> getMealsByCategory(LocalDate date, String category) {
+        return getMealsByDate(date).stream()
+                .filter(meal -> meal.getCategory().equalsIgnoreCase(category))
+                .collect(Collectors.toList());
+    }
+    
+    /**
+     * Gets all meals for the user
+     * @return A map of dates to meals
+     */
+    public Map<LocalDate, List<Meal>> getAllMeals() {
+        return new HashMap<>(mealsByDate);
     }
 }

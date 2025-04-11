@@ -18,7 +18,7 @@ public class MainView {
     }
 
     public int displayMainMenu() {
-        System.out.println("\nMain Menu:");
+        System.out.println("\n===== Main Menu =====");
         System.out.println("1. View Profile");
         System.out.println("2. Calculate BMI");
         System.out.println("3. Calculate BMR and Daily Calorie Needs");
@@ -26,17 +26,16 @@ public class MainView {
         System.out.println("5. Manage Health Goals");
         System.out.println("6. Manage Dietary Preferences");
         System.out.println("7. View Progress");
-        System.out.println("8. Logout");
-        System.out.println("9. Exit");
+        System.out.println("8. Meal Tracking");
+        System.out.println("9. Logout");
+        System.out.println("10. Exit");
         System.out.print("\nEnter your choice: ");
 
         try {
-            int choice = scanner.nextInt();
-            scanner.nextLine(); // Consume newline
+            int choice = Integer.parseInt(scanner.nextLine());
             return choice;
-        } catch (Exception e) {
-            scanner.nextLine(); // Clear buffer
-            return -1; // Invalid input
+        } catch (NumberFormatException e) {
+            return -1; // Invalid choice
         }
     }
 
@@ -83,6 +82,14 @@ public class MainView {
         System.out.print("Password: ");
         String password = scanner.nextLine();
         return new String[]{username, password};
+    }
+    
+    /**
+     * Gets a single line of user input without requesting credentials
+     * @return The user's input as a string
+     */
+    public String getUserInput() {
+        return scanner.nextLine();
     }
 
     public void pressEnterToContinue() {

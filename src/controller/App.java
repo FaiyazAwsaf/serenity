@@ -5,6 +5,7 @@ import model.UserProfile;
 import view.MainView;
 import view.ProfileView;
 import utils.FileHandler;
+import model.Meal;
 
 import java.time.LocalDate;
 import java.util.HashMap;
@@ -125,11 +126,14 @@ public class App {
                     profileView.displayProgressSummary(currentUserProfile.getProgressSummary());
                     mainView.pressEnterToContinue();
                     break;
-                case 8: // Logout
+                case 8: // Meal Tracking
+                    handleMealTracking();
+                    break;
+                case 9: // Logout
                     FileHandler.saveUserProfile(currentUserProfile);
                     loggedIn = false;
                     break;
-                case 9: // Exit
+                case 10: // Exit
                     FileHandler.saveAllProfiles(userProfiles);
                     loggedIn = false;
                     System.exit(0);
@@ -163,7 +167,7 @@ public class App {
             System.out.print("\nEnter your choice: ");
 
             try {
-                int choice = Integer.parseInt(mainView.getLoginCredentials()[0]);
+                int choice = Integer.parseInt(mainView.getUserInput());
 
                 switch (choice) {
                     case 1: // Add goal
@@ -202,6 +206,86 @@ public class App {
             }
         }
     }
+    
+    private void handleMealTracking() {
+        boolean managing = true;
+        while (managing) {
+            System.out.println("\n===== Meal Tracking =====");
+            System.out.println("1. View today's meals");
+            System.out.println("2. Add a new meal");
+            System.out.println("3. Remove a meal");
+            System.out.println("4. View meals by date");
+            System.out.println("5. View calorie summary");
+            System.out.println("6. Return to main menu");
+            System.out.print("\nEnter your choice: ");
+
+            try {
+                int choice = Integer.parseInt(mainView.getUserInput());
+
+                switch (choice) {
+                    case 1: // View today's meals
+                        LocalDate today = LocalDate.now();
+                        profileView.displayMeals(currentUserProfile.getMealsByDate(today), today);
+                        break;
+                    case 2: // Add a new meal
+                        Meal newMeal = profileView.getNewMeal();
+                        if (newMeal != null) {
+                            currentUserProfile.addMeal(newMeal);
+                            System.out.println("\nMeal added successfully!");
+                            FileHandler.saveUserProfile(currentUserProfile);
+                        }
+                        break;
+                    case 3: // Remove a meal
+                        LocalDate removeDate = LocalDate.now();
+                        java.util.List<Meal> todaysMeals = currentUserProfile.getMealsByDate(removeDate);
+                        int mealIndex = profileView.getMealIndexToRemove(todaysMeals);
+                        
+                        if (mealIndex > 0 && mealIndex <= todaysMeals.size()) {
+                            Meal mealToRemove = todaysMeals.get(mealIndex - 1);
+                            currentUserProfile.removeMeal(mealToRemove);
+                            System.out.println("\nMeal removed successfully!");
+                            FileHandler.saveUserProfile(currentUserProfile);
+                        } else if (mealIndex != -1) {
+                            System.out.println("\nInvalid meal number.");
+                        }
+                        break;
+                    case 4: // View meals by date
+                        System.out.print("\nEnter date (yyyy-MM-dd): ");
+                        String dateStr = mainView.getUserInput();
+                        try {
+                            LocalDate date = LocalDate.parse(dateStr);
+                            profileView.displayMeals(currentUserProfile.getMealsByDate(date), date);
+                        } catch (Exception e) {
+                            System.out.println("\nInvalid date format. Please use yyyy-MM-dd.");
+                        }
+                        break;
+                    case 5: // View calorie summary
+                        // Create a map of dates to total calories for the last 7 days
+                        Map<LocalDate, Integer> caloriesByDate = new HashMap<>();
+                        LocalDate endDate = LocalDate.now();
+                        LocalDate startDate = endDate.minusDays(6); // Last 7 days including today
+                        
+                        for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
+                            caloriesByDate.put(date, currentUserProfile.getTotalCaloriesByDate(date));
+                        }
+                        
+                        profileView.displayCalorieSummary(caloriesByDate);
+                        break;
+                    case 6: // Return to main menu
+                        managing = false;
+                        break;
+                    default:
+                        mainView.displayInvalidChoice();
+                }
+            } catch (NumberFormatException e) {
+                mainView.displayInvalidChoice();
+            }
+
+            if (managing) {
+                mainView.pressEnterToContinue();
+            }
+        }
+    }
 
     private void handleDietaryPreferences() {
         boolean managing = true;
@@ -213,7 +297,7 @@ public class App {
             System.out.print("\nEnter your choice: ");
 
             try {
-                int choice = Integer.parseInt(mainView.getLoginCredentials()[0]);
+                int choice = Integer.parseInt(mainView.getUserInput());
 
                 switch (choice) {
                     case 1: // Add preference
@@ -252,4 +336,5 @@ public class App {
             }
         }
     }
+
 }

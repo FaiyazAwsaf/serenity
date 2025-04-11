@@ -2,6 +2,7 @@ package utils;
 
 import model.User;
 import model.UserProfile;
+import model.Meal;
 
 import java.io.*;
 import java.time.LocalDate;
@@ -96,6 +97,19 @@ public class FileHandler {
             for (String preference : profile.getDietaryPreferences()) {
                 writer.println(preference);
             }
+            
+            writer.println("[MEALS]");
+            for (Map.Entry<LocalDate, List<Meal>> entry : profile.getAllMeals().entrySet()) {
+                LocalDate date = entry.getKey();
+                for (Meal meal : entry.getValue()) {
+                    // Format: date,name,calories,category
+                    writer.println(String.format("%s,%s,%d,%s",
+                            date.format(DATE_FORMATTER),
+                            meal.getName(),
+                            meal.getCalories(),
+                            meal.getCategory()));
+                }
+            }
         } catch (IOException e) {
             System.err.println("Error saving profile for " + username + ": " + e.getMessage());
         }
@@ -139,6 +153,18 @@ public class FileHandler {
                         break;
                     case "[DIETARY_PREFERENCES]":
                         profile.addDietaryPreference(line);
+                        break;
+                    case "[MEALS]":
+                        String[] mealParts = line.split(",");
+                        if (mealParts.length >= 4) {
+                            LocalDate date = LocalDate.parse(mealParts[0], DATE_FORMATTER);
+                            String name = mealParts[1];
+                            int calories = Integer.parseInt(mealParts[2]);
+                            String category = mealParts[3];
+                            
+                            Meal meal = new Meal(name, calories, category, date);
+                            profile.addMeal(meal);
+                        }
                         break;
                 }
             }

@@ -2,6 +2,7 @@ package view;
 
 import model.BMI;
 import model.BMR;
+import model.Meal;
 import model.User;
 
 import java.time.LocalDate;
@@ -128,5 +129,173 @@ public class ProfileView {
             scanner.nextLine(); // Clear buffer
             return -1; // Invalid input
         }
+    }
+    
+    /**
+     * Displays meals for a specific date
+     * @param meals List of meals to display
+     * @param date The date for which meals are being displayed
+     */
+    public void displayMeals(List<Meal> meals, LocalDate date) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        System.out.println("\n===== Meals for " + date.format(formatter) + " =====");
+        
+        if (meals.isEmpty()) {
+            System.out.println("No meals recorded for this date.");
+            return;
+        }
+        
+        int totalCalories = 0;
+        System.out.println("\nBreakfast:");
+        List<Meal> breakfastMeals = meals.stream()
+                .filter(meal -> meal.getCategory().equalsIgnoreCase("Breakfast"))
+                .toList();
+        if (breakfastMeals.isEmpty()) {
+            System.out.println("  No breakfast recorded");
+        } else {
+            for (Meal meal : breakfastMeals) {
+                System.out.println("  " + meal);
+                totalCalories += meal.getCalories();
+            }
+        }
+        
+        System.out.println("\nLunch:");
+        List<Meal> lunchMeals = meals.stream()
+                .filter(meal -> meal.getCategory().equalsIgnoreCase("Lunch"))
+                .toList();
+        if (lunchMeals.isEmpty()) {
+            System.out.println("  No lunch recorded");
+        } else {
+            for (Meal meal : lunchMeals) {
+                System.out.println("  " + meal);
+                totalCalories += meal.getCalories();
+            }
+        }
+        
+        System.out.println("\nDinner:");
+        List<Meal> dinnerMeals = meals.stream()
+                .filter(meal -> meal.getCategory().equalsIgnoreCase("Dinner"))
+                .toList();
+        if (dinnerMeals.isEmpty()) {
+            System.out.println("  No dinner recorded");
+        } else {
+            for (Meal meal : dinnerMeals) {
+                System.out.println("  " + meal);
+                totalCalories += meal.getCalories();
+            }
+        }
+        
+        System.out.println("\nSnacks:");
+        List<Meal> snackMeals = meals.stream()
+                .filter(meal -> meal.getCategory().equalsIgnoreCase("Snack"))
+                .toList();
+        if (snackMeals.isEmpty()) {
+            System.out.println("  No snacks recorded");
+        } else {
+            for (Meal meal : snackMeals) {
+                System.out.println("  " + meal);
+                totalCalories += meal.getCalories();
+            }
+        }
+        
+        System.out.println("\nTotal calories for the day: " + totalCalories);
+    }
+    
+    /**
+     * Gets input for a new meal from the user
+     * @return A new Meal object with user input data, or null if input was invalid
+     */
+    public Meal getNewMeal() {
+        try {
+            System.out.println("\n===== Add New Meal =====");
+            
+            System.out.print("Enter meal name: ");
+            String name = scanner.nextLine();
+            
+            System.out.print("Enter calories: ");
+            int calories = scanner.nextInt();
+            scanner.nextLine(); // Consume newline
+            
+            if (calories <= 0) {
+                System.out.println("Calories must be a positive number.");
+                return null;
+            }
+            
+            System.out.println("\nSelect meal category:");
+            System.out.println("1. Breakfast");
+            System.out.println("2. Lunch");
+            System.out.println("3. Dinner");
+            System.out.println("4. Snack");
+            System.out.print("Enter your choice (1-4): ");
+            
+            int categoryChoice = scanner.nextInt();
+            scanner.nextLine(); // Consume newline
+            
+            String category;
+            switch (categoryChoice) {
+                case 1: category = "Breakfast"; break;
+                case 2: category = "Lunch"; break;
+                case 3: category = "Dinner"; break;
+                case 4: category = "Snack"; break;
+                default:
+                    System.out.println("Invalid category choice.");
+                    return null;
+            }
+            
+            return new Meal(name, calories, category, LocalDate.now());
+            
+        } catch (Exception e) {
+            scanner.nextLine(); // Clear buffer
+            System.out.println("Invalid input. Please try again.");
+            return null;
+        }
+    }
+    
+    /**
+     * Gets the index of a meal to remove from a list
+     * @param meals The list of meals to choose from
+     * @return The index of the meal to remove, or -1 if invalid input
+     */
+    public int getMealIndexToRemove(List<Meal> meals) {
+        if (meals.isEmpty()) {
+            System.out.println("No meals to remove.");
+            return -1;
+        }
+        
+        System.out.println("\n===== Remove Meal =====");
+        for (int i = 0; i < meals.size(); i++) {
+            System.out.println((i + 1) + ". " + meals.get(i));
+        }
+        
+        System.out.print("\nEnter the number of the meal to remove (1-" + meals.size() + "): ");
+        try {
+            int index = scanner.nextInt();
+            scanner.nextLine(); // Consume newline
+            return index;
+        } catch (Exception e) {
+            scanner.nextLine(); // Clear buffer
+            return -1; // Invalid input
+        }
+    }
+    
+    /**
+     * Displays a summary of calories consumed over a date range
+     * @param caloriesByDate Map of dates to total calories consumed
+     */
+    public void displayCalorieSummary(Map<LocalDate, Integer> caloriesByDate) {
+        System.out.println("\n===== Calorie Consumption Summary =====");
+        
+        if (caloriesByDate.isEmpty()) {
+            System.out.println("No meal data available.");
+            return;
+        }
+        
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        caloriesByDate.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .forEach(entry -> {
+                    System.out.printf("%s: %d calories\n",
+                            entry.getKey().format(formatter), entry.getValue());
+                });
     }
 }
